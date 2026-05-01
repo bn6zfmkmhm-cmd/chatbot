@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>石綿（アスベスト）専門家チャットボット</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       background-color: #1a1a2e;
@@ -17,39 +13,130 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
     }
 
-    .container {
+    /* ===== APIキー設定画面 ===== */
+    #setupScreen {
+      width: 100%;
+      max-width: 440px;
+      padding: 16px;
+    }
+
+    .setup-card {
+      background-color: #16213e;
+      border: 1px solid #2d2d44;
+      border-radius: 16px;
+      padding: 36px 32px;
+      text-align: center;
+    }
+
+    .setup-card .icon { font-size: 2.8rem; margin-bottom: 14px; }
+
+    .setup-card h2 {
+      font-size: 1.25rem;
+      color: #7eb8f7;
+      margin-bottom: 8px;
+    }
+
+    .setup-card p {
+      font-size: 0.85rem;
+      color: #888;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .setup-card input[type="password"],
+    .setup-card input[type="text"] {
+      width: 100%;
+      background-color: #1a1a2e;
+      border: 1px solid #2d2d44;
+      border-radius: 10px;
+      color: #e0e0e0;
+      padding: 11px 14px;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 10px;
+      font-family: monospace;
+    }
+
+    .setup-card input:focus { border-color: #3a6ea8; }
+    .setup-card input::placeholder { color: #555; font-family: inherit; }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      color: #888;
+      font-size: 0.82rem;
+      justify-content: flex-end;
+    }
+
+    .toggle-row input { width: auto; margin: 0; cursor: pointer; }
+
+    .btn-primary {
+      width: 100%;
+      background-color: #2d5a8e;
+      color: #e0e0e0;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary:hover { background-color: #3a6ea8; }
+
+    .setup-error {
+      color: #e57373;
+      font-size: 0.82rem;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+
+    /* ===== チャット画面 ===== */
+    #chatScreen {
+      display: none;
       width: 100%;
       max-width: 800px;
       height: 100vh;
-      display: flex;
       flex-direction: column;
       padding: 16px;
     }
 
     .header {
       text-align: center;
-      padding: 16px 0 12px;
+      padding: 12px 0 10px;
       border-bottom: 1px solid #2d2d44;
       margin-bottom: 12px;
       flex-shrink: 0;
+      position: relative;
     }
 
-    .header h1 {
-      font-size: 1.4rem;
-      color: #7eb8f7;
-      font-weight: 600;
+    .header h1 { font-size: 1.4rem; color: #7eb8f7; font-weight: 600; }
+    .header p  { font-size: 0.8rem; color: #888; margin-top: 4px; }
+
+    .btn-reset-key {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: 1px solid #2d2d44;
+      border-radius: 7px;
+      color: #666;
+      font-size: 0.75rem;
+      padding: 4px 9px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
-    .header p {
-      font-size: 0.8rem;
-      color: #888;
-      margin-top: 4px;
-    }
+    .btn-reset-key:hover { border-color: #3a4a6a; color: #aaa; }
 
     .chat-window {
       flex: 1;
@@ -61,18 +148,9 @@
       min-height: 0;
     }
 
-    .chat-window::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .chat-window::-webkit-scrollbar-track {
-      background: #16213e;
-    }
-
-    .chat-window::-webkit-scrollbar-thumb {
-      background: #2d2d44;
-      border-radius: 3px;
-    }
+    .chat-window::-webkit-scrollbar { width: 6px; }
+    .chat-window::-webkit-scrollbar-track { background: #16213e; }
+    .chat-window::-webkit-scrollbar-thumb { background: #2d2d44; border-radius: 3px; }
 
     .message {
       display: flex;
@@ -85,30 +163,18 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .message.user {
-      flex-direction: row-reverse;
-    }
+    .message.user { flex-direction: row-reverse; }
 
     .avatar {
-      width: 34px;
-      height: 34px;
+      width: 34px; height: 34px;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       font-size: 0.85rem;
       flex-shrink: 0;
     }
 
-    .message.user .avatar {
-      background-color: #2d5a8e;
-      color: #7eb8f7;
-    }
-
-    .message.assistant .avatar {
-      background-color: #1e3a2f;
-      color: #4caf8a;
-    }
+    .message.user .avatar      { background-color: #2d5a8e; color: #7eb8f7; }
+    .message.assistant .avatar { background-color: #1e3a2f; color: #4caf8a; }
 
     .bubble {
       max-width: 75%;
@@ -132,9 +198,12 @@
       border-top-left-radius: 4px;
     }
 
-    .message.assistant .bubble.loading {
-      color: #666;
-      font-style: italic;
+    .message.assistant .bubble.loading { color: #666; font-style: italic; }
+
+    .bubble.error-bubble {
+      color: #e57373;
+      background-color: #2a1515;
+      border-color: #c62828;
     }
 
     .input-area {
@@ -162,15 +231,10 @@
       transition: border-color 0.2s;
     }
 
-    textarea:focus {
-      border-color: #3a6ea8;
-    }
+    textarea:focus { border-color: #3a6ea8; }
+    textarea::placeholder { color: #555; }
 
-    textarea::placeholder {
-      color: #555;
-    }
-
-    button {
+    .btn-send {
       background-color: #2d5a8e;
       color: #e0e0e0;
       border: none;
@@ -184,25 +248,8 @@
       height: 44px;
     }
 
-    button:hover:not(:disabled) {
-      background-color: #3a6ea8;
-    }
-
-    button:disabled {
-      background-color: #1e3a5f;
-      color: #555;
-      cursor: not-allowed;
-    }
-
-    .error-msg {
-      color: #e57373;
-      background-color: #2a1515;
-      border: 1px solid #c62828;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 0.85rem;
-      margin: 4px 0;
-    }
+    .btn-send:hover:not(:disabled) { background-color: #3a6ea8; }
+    .btn-send:disabled { background-color: #1e3a5f; color: #555; cursor: not-allowed; }
 
     .welcome {
       text-align: center;
@@ -210,15 +257,8 @@
       color: #555;
     }
 
-    .welcome .icon {
-      font-size: 2.5rem;
-      margin-bottom: 12px;
-    }
-
-    .welcome p {
-      font-size: 0.9rem;
-      line-height: 1.7;
-    }
+    .welcome .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .welcome p { font-size: 0.9rem; line-height: 1.7; }
 
     .welcome .examples {
       margin-top: 16px;
@@ -237,21 +277,34 @@
       cursor: pointer;
       text-align: left;
       transition: all 0.2s;
-      height: auto;
     }
 
-    .example-btn:hover {
-      background-color: #1e2d4a;
-      border-color: #3a4a6a;
-      color: #aaa;
-    }
+    .example-btn:hover { background-color: #1e2d4a; border-color: #3a4a6a; color: #aaa; }
   </style>
 </head>
 <body>
-  <div class="container">
+
+  <!-- APIキー設定画面 -->
+  <div id="setupScreen">
+    <div class="setup-card">
+      <div class="icon">🔑</div>
+      <h2>APIキーの設定</h2>
+      <p>AnthropicのAPIキーを入力してください。<br>キーはブラウザのlocalStorageに保存され、<br>次回から自動で読み込まれます。</p>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off" />
+      <label class="toggle-row">
+        <input type="checkbox" id="showKey" onchange="toggleShow()"> キーを表示する
+      </label>
+      <button class="btn-primary" onclick="saveApiKey()">保存して始める</button>
+      <div class="setup-error" id="setupError"></div>
+    </div>
+  </div>
+
+  <!-- チャット画面 -->
+  <div id="chatScreen">
     <div class="header">
       <h1>⚠️ 石綿（アスベスト）専門家</h1>
       <p>危険性・法規制・除去方法・健康被害・調査方法についてお答えします</p>
+      <button class="btn-reset-key" onclick="resetApiKey()">&#x1f511; APIキー変更</button>
     </div>
 
     <div class="chat-window" id="chatWindow">
@@ -275,27 +328,83 @@
         onkeydown="handleKeyDown(event)"
         oninput="autoResize(this)"
       ></textarea>
-      <button id="sendBtn" onclick="sendMessage()">送信</button>
+      <button class="btn-send" id="sendBtn" onclick="sendMessage()">送信</button>
     </div>
   </div>
 
   <script>
-    // ============================================================
-    // ★ APIキーをここに設定してください
-    // ============================================================
-    const ANTHROPIC_API_KEY = 'YOUR_API_KEY_HERE';
-    // ============================================================
-
-    const MODEL = 'claude-opus-4-7';
+    const LS_KEY = 'asbestos_chatbot_api_key';
+    const MODEL  = 'claude-opus-4-7';
     const SYSTEM_PROMPT = 'あなたは石綿（アスベスト）の専門家です。石綿の危険性、法規制、除去方法、健康被害、調査方法などについて正確に答えてください。';
 
+    let apiKey = '';
     let conversationHistory = [];
     let isLoading = false;
 
-    const chatWindow = document.getElementById('chatWindow');
-    const userInput  = document.getElementById('userInput');
-    const sendBtn    = document.getElementById('sendBtn');
+    // --- 起動時: localStorage確認 ---
+    (function init() {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) {
+        apiKey = saved;
+        showChatScreen();
+      } else {
+        showSetupScreen();
+      }
+    })();
 
+    function showSetupScreen() {
+      document.getElementById('setupScreen').style.display = 'block';
+      document.getElementById('chatScreen').style.display  = 'none';
+      setTimeout(() => document.getElementById('apiKeyInput').focus(), 50);
+    }
+
+    function showChatScreen() {
+      document.getElementById('setupScreen').style.display = 'none';
+      document.getElementById('chatScreen').style.display  = 'flex';
+      setTimeout(() => document.getElementById('userInput').focus(), 50);
+    }
+
+    // --- APIキー設定画面 ---
+    function toggleShow() {
+      const input = document.getElementById('apiKeyInput');
+      input.type = document.getElementById('showKey').checked ? 'text' : 'password';
+    }
+
+    function saveApiKey() {
+      const val = document.getElementById('apiKeyInput').value.trim();
+      const errEl = document.getElementById('setupError');
+      if (!val) {
+        errEl.textContent = 'APIキーを入力してください。';
+        return;
+      }
+      if (!val.startsWith('sk-ant-')) {
+        errEl.textContent = '正しいAnthropic APIキーの形式は 「sk-ant-」で始まります。';
+        return;
+      }
+      errEl.textContent = '';
+      apiKey = val;
+      localStorage.setItem(LS_KEY, apiKey);
+      showChatScreen();
+    }
+
+    function resetApiKey() {
+      if (!confirm('APIキーをリセットしますか？会話履歴は消去されます。')) return;
+      localStorage.removeItem(LS_KEY);
+      apiKey = '';
+      conversationHistory = [];
+      const cw = document.getElementById('chatWindow');
+      cw.innerHTML = '';
+      const welcome = document.createElement('div');
+      welcome.id = 'welcomeMsg';
+      welcome.className = 'welcome';
+      welcome.innerHTML = '<div class="icon">🔬</div><p>石綿（アスベスト）に関するご質問をどうぞ。<br>専門的な情報をお伝えします。</p>';
+      cw.appendChild(welcome);
+      document.getElementById('apiKeyInput').value = '';
+      document.getElementById('setupError').textContent = '';
+      showSetupScreen();
+    }
+
+    // --- チャットUI ---
     function autoResize(el) {
       el.style.height = 'auto';
       el.style.height = Math.min(el.scrollHeight, 140) + 'px';
@@ -309,20 +418,21 @@
     }
 
     function sendExample(text) {
-      userInput.value = text;
-      autoResize(userInput);
+      document.getElementById('userInput').value = text;
+      autoResize(document.getElementById('userInput'));
       sendMessage();
     }
 
     function removeWelcome() {
-      const welcome = document.getElementById('welcomeMsg');
-      if (welcome) welcome.remove();
+      const el = document.getElementById('welcomeMsg');
+      if (el) el.remove();
     }
 
-    function appendMessage(role, content, id) {
+    const chatWindow = () => document.getElementById('chatWindow');
+
+    function appendMessage(role, text) {
       const wrap = document.createElement('div');
       wrap.className = 'message ' + role;
-      if (id) wrap.id = id;
 
       const avatar = document.createElement('div');
       avatar.className = 'avatar';
@@ -330,17 +440,16 @@
 
       const bubble = document.createElement('div');
       bubble.className = 'bubble';
-      bubble.textContent = content;
+      bubble.textContent = text;
 
       wrap.appendChild(avatar);
       wrap.appendChild(bubble);
-      chatWindow.appendChild(wrap);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-      return wrap;
+      chatWindow().appendChild(wrap);
+      chatWindow().scrollTop = chatWindow().scrollHeight;
     }
 
-    function appendLoadingMessage() {
-      const id = 'loading-' + Date.now();
+    function appendLoading() {
+      const id = 'msg-' + Date.now();
       const wrap = document.createElement('div');
       wrap.className = 'message assistant';
       wrap.id = id;
@@ -355,49 +464,43 @@
 
       wrap.appendChild(avatar);
       wrap.appendChild(bubble);
-      chatWindow.appendChild(wrap);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+      chatWindow().appendChild(wrap);
+      chatWindow().scrollTop = chatWindow().scrollHeight;
       return id;
     }
 
-    function updateMessage(id, content, isError) {
+    function resolveLoading(id, text, isError) {
       const wrap = document.getElementById(id);
       if (!wrap) return;
       const bubble = wrap.querySelector('.bubble');
       bubble.classList.remove('loading');
-      if (isError) {
-        bubble.classList.add('error-msg');
-      }
-      bubble.textContent = content;
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+      if (isError) bubble.classList.add('error-bubble');
+      bubble.textContent = text;
+      chatWindow().scrollTop = chatWindow().scrollHeight;
     }
 
     async function sendMessage() {
-      const text = userInput.value.trim();
+      const input = document.getElementById('userInput');
+      const text  = input.value.trim();
       if (!text || isLoading) return;
-
-      if (ANTHROPIC_API_KEY === 'YOUR_API_KEY_HERE') {
-        alert('ANTHROPIC_API_KEY を設定してください。HTMLファイル内の ANTHROPIC_API_KEY 変数にAPIキーを入力してください。');
-        return;
-      }
 
       removeWelcome();
       isLoading = true;
-      sendBtn.disabled = true;
-      userInput.value = '';
-      userInput.style.height = 'auto';
+      document.getElementById('sendBtn').disabled = true;
+      input.value = '';
+      input.style.height = 'auto';
 
       appendMessage('user', text);
       conversationHistory.push({ role: 'user', content: text });
 
-      const loadingId = appendLoadingMessage();
+      const loadingId = appendLoading();
 
       try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': ANTHROPIC_API_KEY,
+            'x-api-key': apiKey,
             'anthropic-version': '2023-06-01',
             'anthropic-dangerous-direct-browser-access': 'true'
           },
@@ -409,28 +512,37 @@
           })
         });
 
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          const errMsg = errData?.error?.message || `HTTPエラー ${response.status}`;
-          throw new Error(errMsg);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          if (res.status === 401) {
+            localStorage.removeItem(LS_KEY);
+            apiKey = '';
+            resolveLoading(loadingId, 'APIキーが無効です。先ほどのキーを再確認してください。', true);
+            conversationHistory.pop();
+            setTimeout(() => resetApiKey(), 2000);
+            return;
+          }
+          throw new Error(err?.error?.message || `HTTPエラー ${res.status}`);
         }
 
-        const data = await response.json();
-        const assistantText = data.content?.[0]?.text ?? '（応答なし）';
-
-        conversationHistory.push({ role: 'assistant', content: assistantText });
-        updateMessage(loadingId, assistantText, false);
+        const data = await res.json();
+        const reply = data.content?.[0]?.text ?? '（応答なし）';
+        conversationHistory.push({ role: 'assistant', content: reply });
+        resolveLoading(loadingId, reply, false);
 
       } catch (err) {
-        const errMsg = `エラー: ${err.message}`;
-        conversationHistory.pop(); // remove the user message that failed
-        updateMessage(loadingId, errMsg, true);
+        conversationHistory.pop();
+        resolveLoading(loadingId, `エラー: ${err.message}`, true);
       } finally {
         isLoading = false;
-        sendBtn.disabled = false;
-        userInput.focus();
+        document.getElementById('sendBtn').disabled = false;
+        input.focus();
       }
     }
+
+    document.getElementById('apiKeyInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveApiKey();
+    });
   </script>
 </body>
 </html>
